@@ -2,9 +2,10 @@ SRCs= src/mt19937ar-cok.c                src/starrynight-config.c           src/
 	  src/starrynight-analysis.c         src/starrynight-lattice.c          src/starrynight-montecarlo-core.c  src/xorshift128plus.c
 
 # Code compilation
+# NB on my system link commands must be at the end for some reason. AMcM 6/1/2017.
 starrynight: $(SRCs) 
-	gcc -O4 -lm -lconfig -o starrynight src/starrynight-main.c
-
+	gcc -O4 -o starrynight src/starrynight-main.c -lm -lconfig 
+	
 starrynight-openmp: ${SRCs} 
 	gcc -O4 -lm -lconfig -fopenmp -o starrynight src/starrynight-main.c
 
