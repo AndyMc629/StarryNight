@@ -19,7 +19,7 @@
 // Prototypes...
 static int rand_int(int SPAN);
 
-#include "starrynight-config.c" //Global variables & config file reader function  
+#include "starrynight-config.c" //Global variables & config file reader function
 #include "starrynight-lattice.c" //Lattice initialisation / zeroing / sphere picker fn; dot product
 #include "starrynight-analysis.c" //Analysis functions, and output routines
 #include "starrynight-montecarlo-core.c" // Core simulation
@@ -46,7 +46,7 @@ void analysis_initial()
 
 void analysis_midpoint(int MCstep, FILE *log)
 {
-    char name[100],prefix[100]; 
+    char name[100],prefix[100];
     // Log some data... Nb: Slow as does a NxN summation of lattice energy
     // contributions!
     //        lattice_potential_log(log);
@@ -99,6 +99,24 @@ void analysis_midpoint(int MCstep, FILE *log)
 
 void analysis_final()
 {
+    // just copied everything from analysis_initial(). APMcM 9/1/2017.
+    if(CalculateEfield) lattice_Efield_XYZ("final_lattice_efield.xyz");
+    if(CalculateEfield) lattice_Efieldoffset_XYZ("final_lattice_efieldoffset.xyz");
+    if(CalculatePotential) lattice_potential_XYZ("final_lattice_potential.xyz"); // potential distro
+    if(SaveDipolesSVG) outputlattice_svg("final-SVG.svg");
+    if(CalculatePotential) outputpotential_png("final_pot.png"); //"final_pot.png");
+    if(SaveDipolesXYZ) outputlattice_xyz("final_dipoles.xyz");
+
+    if(CalculateRadialOrderParameter) radial_order_parameter();
+    // output initialised lattice - mainly for debugging
+    if(SaveDipolesPNG) outputlattice_ppm_hsv("final.png");
+    if(CalculatePotential) outputpotential_png("final_pot.png"); //"final_pot.png");
+    //outputlattice_xyz("initial_dipoles.xyz");
+    //outputlattice_xyz_overprint("initial_overprint.xyz");
+
+    //if (DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
+    if (CalculateRecombination) recombination_calculator(stderr);
+
     // Final data output / summaries.
     //    outputlattice_ppm_hsv("MC-PNG_final.png");
     //    outputlattice_svg("MC-SVG_final.svg");
@@ -106,7 +124,7 @@ void analysis_final()
     //lattice_potential_log(log);
     //lattice_angle_log(log);
 
-    //    lattice_potential_XY("final_pot_xy.dat");
+    //lattice_potential_XY("final_pot_xy.dat");
 
     //outputlattice_xyz("dipoles.xyz");
     //outputlattice_xyz_overprint("overprint.xyz");
@@ -118,7 +136,7 @@ int main(int argc, char *argv[])
     int i,j,k, x,y; // for loop iterators
     int tic,toc,tac;    // keep track of time for user interface; how many MC moves per second
 
-    char name[100],prefix[100]; 
+    char name[100],prefix[100];
     char const *LOGFILE = NULL; //for output filenames
     // Yes, I know, 100 chars are enough for any segfault ^_^
 
@@ -162,8 +180,8 @@ int main(int argc, char *argv[])
     initialise_lattice(); //populate with random dipoles
     fprintf(stderr,"Lattice initialised...");
 
-    solid_solution(); //populate dipole strengths on top of this
-    fprintf(stderr,"Solid solution formed...");
+    //solid_solution(); //populate dipole strengths on top of this
+    //fprintf(stderr,"Solid solution formed...");
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
@@ -187,8 +205,11 @@ int main(int argc, char *argv[])
     //    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
     //        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
     //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
+    //for (T=400; T=0; T-=50)
+    for (Efield.x=0.0; Efield.x<=0.5; Efield.x+=0.1)
     {
         //        Efield.x=AMP*sin(PHASE);
+        fprintf(stderr,"\n\tEfield in x direction = %f.\n", Efield.x);
 
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
         //        on T-dep forloop
@@ -201,7 +222,7 @@ int main(int argc, char *argv[])
             MC_moves(MCMinorSteps);
             toc=clock();
 
-            analysis_midpoint(i,log);
+            //analysis_midpoint(i,log);
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
 
             tac=clock();
@@ -213,7 +234,7 @@ int main(int argc, char *argv[])
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
             //        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
         }
-    } 
+    }
     // OK; we're finished...
 
     fprintf(stderr,"\n");
@@ -225,4 +246,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
